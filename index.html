@@ -535,6 +535,8 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
     </div>
     <button class="btn-top" onclick="returnHome()">🏠 Accueil</button>
     <button class="btn-top" onclick="resetAllData()" style="color:#EF4444;border-color:rgba(239,68,68,.35)">🗑 Vider</button>
+    <button id="owner-btn-gen" class="btn-top" onclick="ownerGenerate()" style="display:none;background:var(--cyan);color:var(--navy);border-color:var(--cyan);font-weight:700">⚡ Synthèse</button>
+    <button id="owner-btn-all" class="btn-top" onclick="ownerRegenAll()" style="display:none;color:var(--cyan);border-color:var(--cyan)">⚡ Tout</button>
     <button class="btn-top cyan" onclick="goStep(4)">📋 Inputs CODIR Marketing</button>
   </div>
 </nav>
@@ -1430,40 +1432,15 @@ function updateOnlineDisplay() {
    Si sample (IA) est indisponible, la vue synthèse reste fonctionnelle
    sans bouton Générer.
 ════════════════════════════════════════ */
-/* applyOwnerUI : affiche/masque le panneau facilitateur */
+/* applyOwnerUI : affiche/masque les boutons owner dans la topbar */
 function applyOwnerUI() {
-  // Panneau fixe facilitateur
-  let panel = document.getElementById('facilitator-panel');
-  if (_isOwner) {
-    if (!panel) {
-      panel = document.createElement('div');
-      panel.id = 'facilitator-panel';
-      panel.style.cssText = 'position:fixed;bottom:72px;right:18px;z-index:9998;background:var(--navy-2);border:1px solid var(--cyan);border-radius:12px;padding:10px 14px;display:none;flex-direction:column;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,.5)';
-      panel.innerHTML = `
-        <div style="font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">⚡ Mode CODIR Marketing</div>
-        <button id="panel-btn-gen" style="padding:7px 14px;background:var(--cyan);color:var(--navy);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body)">⚡ Générer synthèse</button>
-        <button id="panel-btn-all" style="padding:7px 14px;background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body)">⚡ Tout régénérer</button>
-      `;
-      const loadAndRun = (fn) => {
-        if (sampleFn) { fn(); return; }
-        document.getElementById('panel-btn-gen').textContent = '⏳ Chargement IA…';
-        loadSampleFn().then(s=>{ sampleFn=s; fn(); }).catch(()=>{ document.getElementById('panel-btn-gen').textContent='⚠ IA indispo'; });
-      };
-      panel.querySelector('#panel-btn-gen').onclick = () => {
-        // Aller en vue synthèse si besoin
-        if (currentView !== 'synth') { debateLever = currentLever; switchView('synth'); }
-        loadAndRun(() => generateOne(debateLever));
-      };
-      panel.querySelector('#panel-btn-all').onclick = () => {
-        if (currentView !== 'synth') { debateLever = currentLever; switchView('synth'); }
-        loadAndRun(() => regenerateAll());
-      };
-      document.body.appendChild(panel);
-    }
-    panel.style.display = '';
-  } else {
-    if (panel) panel.style.display = 'none';
-  }
+  const btnGen = document.getElementById('owner-btn-gen');
+  const btnAll = document.getElementById('owner-btn-all');
+  if (btnGen) btnGen.style.display = _isOwner ? '' : 'none';
+  if (btnAll) btnAll.style.display = _isOwner ? '' : 'none';
+  // Supprimer l'ancien panneau flottant s'il existe encore
+  const oldPanel = document.getElementById('facilitator-panel');
+  if (oldPanel) oldPanel.remove();
   ['btn-run','btn-regen-all'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
@@ -1471,9 +1448,28 @@ function applyOwnerUI() {
 }
 
 function showFacPanel(show) {
-  const panel = document.getElementById('facilitator-panel');
-  if (!panel) return;
-  panel.style.display = (_isOwner && show) ? 'flex' : 'none';
+  // compatibilité — désormais les boutons sont dans la topbar, rien à faire ici
+}
+
+function _ownerLoadAndRun(fn) {
+  if (sampleFn) { fn(); return; }
+  const btn = document.getElementById('owner-btn-gen');
+  const orig = btn ? btn.textContent : '';
+  if (btn) btn.textContent = '⏳…';
+  loadSampleFn().then(s => { sampleFn = s; if (btn) btn.textContent = orig; fn(); })
+               .catch(() => { if (btn) btn.textContent = '⚠ IA indispo'; });
+}
+
+function ownerGenerate() {
+  if (!_isOwner) return;
+  if (currentView !== 'synth') { debateLever = currentLever; switchView('synth'); }
+  _ownerLoadAndRun(() => generateOne(debateLever));
+}
+
+function ownerRegenAll() {
+  if (!_isOwner) return;
+  if (currentView !== 'synth') { debateLever = currentLever; switchView('synth'); }
+  _ownerLoadAndRun(() => regenerateAll());
 }
 
 function switchView(v) {

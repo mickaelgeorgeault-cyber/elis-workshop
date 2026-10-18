@@ -35,7 +35,7 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
 .step-num{width:19px;height:19px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--fg-3);flex-shrink:0}
 .step-tab.active .step-num{background:var(--cyan);color:var(--navy)}
 .step-tab.done .step-num{background:var(--validated);color:#fff}
-.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0;overflow-x:auto;max-width:100%}
 .online-users{display:flex;align-items:center}
 .user-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;border:2px solid var(--navy);margin-left:-6px;flex-shrink:0}
 .online-count{font-size:11px;color:var(--fg-3);margin-left:6px}
@@ -537,8 +537,8 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
     <button class="btn-top" onclick="resetAllData()" style="color:#EF4444;border-color:rgba(239,68,68,.35)">🗑 Vider</button>
     <button id="owner-btn-gen" class="btn-top" onclick="ownerGenerate()" style="display:none;background:var(--cyan);color:var(--navy);border-color:var(--cyan);font-weight:700">⚡ Synthèse</button>
     <button id="owner-btn-all" class="btn-top" onclick="ownerRegenAll()" style="display:none;color:var(--cyan);border-color:var(--cyan)">⚡ Tout</button>
-    <button class="btn-top" onclick="toggleFullscreen()" id="btn-fullscreen" title="Plein écran pour travail collectif">⛶ Plein écran</button>
     <button class="btn-top cyan" onclick="goStep(4)">📋 Inputs CODIR Marketing</button>
+    <button class="btn-top" onclick="toggleFullscreen()" id="btn-fullscreen" style="color:#a78bfa;border-color:rgba(167,139,250,.4)" title="Plein écran pour travail collectif">⛶ Plein écran</button>
   </div>
 </nav>
 

@@ -694,7 +694,7 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn-skip" onclick="leverNav(-1)" id="btn-prev-skip">← Précédent</button>
-          <button class="btn-save-next" onclick="saveAndGoSynth()">Sauvegarder & voir Synthèse →</button>
+          <button class="btn-save-next" onclick="saveAndNextLever()">✅ Enregistrer & Levier suivant →</button>
         </div>
       </div>
     </div>
@@ -1711,6 +1711,32 @@ function refreshPeerInputs() {
       </div>`).join('')}
     </div>`;
   } catch(e) { console.warn('[refreshPeerInputs] erreur ignorée:', e); }
+}
+
+/* saveAndNextLever : sauvegarde explicite et passe au levier suivant.
+   Au dernier levier, bascule vers la vue Synthèse IA. */
+async function saveAndNextLever() {
+  try {
+    // Force save même si myName n'est pas défini (autosave bloque sur !myName)
+    const idx = currentLever;
+    const ta = document.getElementById('inp-main');
+    const val = ta ? ta.value.trim() : '';
+    if (myName && val) {
+      const key = `${idx}_${myName}`;
+      await fbSet('inputs', key, { name: myName, text: val, ts: Date.now(), lever: idx });
+      if (!allInputs[idx]) allInputs[idx] = {};
+      allInputs[idx][myName] = { name: myName, text: val, ts: Date.now(), lever: idx };
+    } else {
+      autosave(); // fallback autosave standard
+    }
+    if (currentLever < 19) {
+      currentLever++;
+      renderInputLever(currentLever);
+    } else {
+      // Dernier levier — basculer vers Synthèse IA
+      goStep(2);
+    }
+  } catch(e) { console.warn('[saveAndNextLever]:', e); }
 }
 
 /* saveAndNext : sauvegarde et passe au levier suivant.

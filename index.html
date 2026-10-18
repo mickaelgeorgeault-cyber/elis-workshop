@@ -537,6 +537,7 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
     <button class="btn-top" onclick="resetAllData()" style="color:#EF4444;border-color:rgba(239,68,68,.35)">🗑 Vider</button>
     <button id="owner-btn-gen" class="btn-top" onclick="ownerGenerate()" style="display:none;background:var(--cyan);color:var(--navy);border-color:var(--cyan);font-weight:700">⚡ Synthèse</button>
     <button id="owner-btn-all" class="btn-top" onclick="ownerRegenAll()" style="display:none;color:var(--cyan);border-color:var(--cyan)">⚡ Tout</button>
+    <button class="btn-top" onclick="toggleFullscreen()" id="btn-fullscreen" title="Plein écran pour travail collectif">⛶ Plein écran</button>
     <button class="btn-top cyan" onclick="goStep(4)">📋 Inputs CODIR Marketing</button>
   </div>
 </nav>
@@ -1430,6 +1431,27 @@ function applyOwnerUI() {
 function showFacPanel(show) {
   // compatibilité — désormais les boutons sont dans la topbar, rien à faire ici
 }
+
+/* toggleFullscreen : plein écran natif du navigateur pour travail collectif */
+function toggleFullscreen() {
+  const btn = document.getElementById('btn-fullscreen');
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().then(() => {
+      if (btn) btn.textContent = '✕ Quitter plein écran';
+    }).catch(() => {
+      // Fallback : zoom CSS si fullscreen non supporté
+      document.body.style.zoom = document.body.style.zoom === '1.3' ? '1' : '1.3';
+    });
+  } else {
+    document.exitFullscreen().then(() => {
+      if (btn) btn.textContent = '⛶ Plein écran';
+    });
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = document.fullscreenElement ? '✕ Quitter plein écran' : '⛶ Plein écran';
+});
 
 function _ownerLoadAndRun(fn) {
   if (sampleFn) { fn(); return; }

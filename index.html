@@ -944,7 +944,7 @@ async function geminiSample(prompt) {
       'X-Title': 'CODIR Marketing Workshop'
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-haiku-5-5',
+      model: 'mistralai/mistral-7b-instruct',
       messages: [{role: 'user', content: prompt}]
     })
   });

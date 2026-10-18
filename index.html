@@ -533,12 +533,12 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
       </svg>
       <span class="prog-text" id="prog-text">0 / 20</span>
     </div>
-    <button class="btn-top" onclick="returnHome()">🏠 Accueil</button>
-    <button class="btn-top" onclick="resetAllData()" style="color:#EF4444;border-color:rgba(239,68,68,.35)">🗑 Vider</button>
+    <button class="btn-top" onclick="returnHome()" title="Accueil">🏠</button>
+    <button class="btn-top" onclick="resetAllData()" style="color:#EF4444;border-color:rgba(239,68,68,.35)" title="Vider toutes les données">🗑</button>
     <button id="owner-btn-gen" class="btn-top" onclick="ownerGenerate()" style="display:none;background:var(--cyan);color:var(--navy);border-color:var(--cyan);font-weight:700">⚡ Synthèse</button>
     <button id="owner-btn-all" class="btn-top" onclick="ownerRegenAll()" style="display:none;color:var(--cyan);border-color:var(--cyan)">⚡ Tout</button>
-    <button class="btn-top cyan" onclick="goStep(4)">📋 Inputs CODIR Marketing</button>
-    <button class="btn-top" onclick="toggleFullscreen()" id="btn-fullscreen" style="color:#a78bfa;border-color:rgba(167,139,250,.4)" title="Plein écran pour travail collectif">⛶ Plein écran</button>
+    <button class="btn-top" onclick="toggleFullscreen()" id="btn-fullscreen" style="color:#a78bfa;border-color:rgba(167,139,250,.4);font-size:16px;padding:4px 10px" title="Plein écran pour travail collectif">⛶</button>
+    <button class="btn-top cyan" onclick="goStep(4)">📋 Inputs</button>
   </div>
 </nav>
 

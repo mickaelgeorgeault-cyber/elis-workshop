@@ -944,7 +944,7 @@ async function geminiSample(prompt) {
       'X-Title': 'CODIR Marketing Workshop'
     },
     body: JSON.stringify({
-      model: 'google/gemma-4-31b-it:free',
+      model: 'openrouter/auto',
       messages: [{role: 'user', content: prompt}]
     })
   });
@@ -2279,6 +2279,8 @@ async function regenerateAll(){
       if(btn) btn.textContent=`⏳ ${done}/${leversToProcess.length} traités…`;
       await generateOne(lv.id, true); // silentRender=true → pas de re-render pendant la boucle
       done++;
+      // Délai anti-rate-limit entre chaque appel
+      if(done < leversToProcess.length) await new Promise(r=>setTimeout(r, 1500));
     }
     debateLever=savedLever; // restaurer le levier courant
     if(btn){btn.disabled=false;btn.textContent='⚡ Tout régénérer';}

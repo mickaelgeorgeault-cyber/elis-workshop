@@ -2137,6 +2137,8 @@ async function generateOne(idx, silentRender=false) {
   // Agréger les contributions disponibles (DB + contribution locale)
   const inp={...(allInputs[idx]||{})};
   if(myInputs[idx] && myId) inp[myId]={...myInputs[idx],name:myName,color:myColor};
+  // Normaliser : accepte ancien format (text) et nouveau (orientation)
+  Object.values(inp).forEach(d => { if (!d.orientation && d.text) d.orientation = d.text; });
   const members=Object.entries(inp).filter(([,d])=>d.orientation);
 
   // Génération IA uniquement si inputs présents ET sample disponible
@@ -2266,6 +2268,8 @@ async function regenerateAll(){
     const leversToProcess=LEVERS.filter(lv=>{
       const inp={...(allInputs[lv.id]||{})};
       if(myInputs[lv.id]) inp[myId]=myInputs[lv.id];
+      // Compatibilité ancien format text/nouveau format orientation
+      Object.values(inp).forEach(d => { if (!d.orientation && d.text) d.orientation = d.text; });
       return Object.values(inp).some(d=>d.orientation);
     });
     const savedLever=debateLever; // snapshot pour ne pas naviguer pendant la boucle

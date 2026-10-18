@@ -1118,7 +1118,10 @@ async function rtdbListen() {
         const leverIdx = parseInt(id.split('_')[0]);
         const uid = id.split('_').slice(1).join('_');
         if (!newAllInputs[leverIdx]) newAllInputs[leverIdx] = {};
-        newAllInputs[leverIdx][uid] = d || {};
+        // Compatibilité ancien format (text) et nouveau format (orientation)
+        const normalized = d || {};
+        if (!normalized.orientation && normalized.text) normalized.orientation = normalized.text;
+        newAllInputs[leverIdx][uid] = normalized;
       });
       if (JSON.stringify(newAllInputs) !== JSON.stringify(allInputs)) {
         allInputs = newAllInputs;

@@ -1049,95 +1049,89 @@ function handleRoomMsg(topic, payload) {
 }
 
 /* ════════════════════════════════════════
-   FIREBASE REST — aucun compte requis
-   Toute personne avec le lien peut lire/écrire.
-   Polling toutes les 3s pour le temps réel.
+   FIREBASE REALTIME DATABASE — WebSocket natif, zéro polling, zéro quota lectures
+   Toute personne avec le lien peut lire/écrire (règles mode test).
 ════════════════════════════════════════ */
 const FB_PROJECT = 'sales-engine-e4aaa';
 const FB_KEY = 'AIzaSyAHs_6cXJ8ttt6WUi2xDIMhwcGKey6bg84';
-const FB_BASE = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
+const RTDB_BASE = 'https://sales-engine-e4aaa-default-rtdb.firebaseio.com';
 
-function fbToJs(fields) {
-  if (!fields) return {};
-  const out = {};
-  for (const [k, v] of Object.entries(fields)) {
-    if (v.stringValue !== undefined) out[k] = v.stringValue;
-    else if (v.integerValue !== undefined) out[k] = parseInt(v.integerValue);
-    else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
-    else if (v.doubleValue !== undefined) out[k] = v.doubleValue;
-    else if (v.nullValue !== undefined) out[k] = null;
-    else if (v.mapValue) out[k] = fbToJs(v.mapValue.fields||{});
-    else out[k] = null;
-  }
-  return out;
-}
-
-function jsToFb(obj) {
-  const fields = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === null || v === undefined) fields[k] = {nullValue: null};
-    else if (typeof v === 'boolean') fields[k] = {booleanValue: v};
-    else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v};
-    else if (typeof v === 'object') fields[k] = {mapValue: {fields: jsToFb(v)}};
-    else fields[k] = {stringValue: String(v)};
-  }
-  return fields;
-}
-
+// ── Realtime Database REST (lecture/écriture one-shot) ──────────────────────
 async function fbGet(col, docId) {
-  const r = await fetch(`${FB_BASE}/${col}/${docId}?key=${FB_KEY}`);
+  const r = await fetch(`${RTDB_BASE}/${col}/${docId}.json?auth=${FB_KEY}`);
   if (!r.ok) return null;
-  const j = await r.json();
-  return j.fields ? fbToJs(j.fields) : null;
+  return await r.json();
 }
 
 async function fbSet(col, docId, data) {
-  const fields = jsToFb(data);
-  const mask = Object.keys(data).map(f => `updateMask.fieldPaths=${encodeURIComponent(f)}`).join('&');
-  const r = await fetch(`${FB_BASE}/${col}/${docId}?key=${FB_KEY}&${mask}`, {
-    method: 'PATCH', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({fields})
+  const r = await fetch(`${RTDB_BASE}/${col}/${docId}.json`, {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
   });
   return r.ok;
 }
 
 async function fbDelete(col, docId) {
-  const r = await fetch(`${FB_BASE}/${col}/${docId}?key=${FB_KEY}`, {method:'DELETE'});
+  const r = await fetch(`${RTDB_BASE}/${col}/${docId}.json`, {method:'DELETE'});
   return r.ok;
 }
 
 async function fbList(col) {
-  const r = await fetch(`${FB_BASE}/${col}?key=${FB_KEY}&pageSize=200`);
+  const r = await fetch(`${RTDB_BASE}/${col}.json`);
   if (!r.ok) return [];
   const j = await r.json();
-  return (j.documents||[]).map(d => {
-    const id = d.name.split('/').pop();
-    return {id, data: fbToJs(d.fields||{})};
-  });
+  if (!j) return [];
+  return Object.entries(j).map(([id, data]) => ({id, data: data||{}}));
 }
 
-// fsSet/fsDelete — Firebase REST
+async function fbDeleteAll(col) {
+  const r = await fetch(`${RTDB_BASE}/${col}.json`, {method:'DELETE'});
+  return r.ok;
+}
+
+// fsSet/fsDelete — alias
 async function fsSet(col, id, data) { return fbSet(col, id, data); }
 async function fsDelete(col, id) { return fbDelete(col, id); }
 
-let _fbPollTimer = null;
-let _fbPollDelay = 8000;   // intervalle courant (ms)
-let _fbPoll429 = 0;        // compteur d'erreurs 429 consécutives
-async function fbPoll() {
-  try {
-    // Charger inputs
-    const inputDocs = await fbList('inputs');
-    const newAllInputs = {};
-    inputDocs.forEach(({id, data}) => {
-      const leverIdx = parseInt(id.split('_')[0]);
-      const uid = id.split('_').slice(1).join('_');
-      if (!newAllInputs[leverIdx]) newAllInputs[leverIdx] = {};
-      newAllInputs[leverIdx][uid] = data;
-    });
-    // Détecter changements
-    const changed = JSON.stringify(newAllInputs) !== JSON.stringify(allInputs);
-    if (changed) {
-      allInputs = newAllInputs;
+// ── WebSocket temps réel via SSE (EventSource Firebase) ────────────────────
+let _rtdbInputsES = null;
+let _rtdbGuidES   = null;
+
+function rtdbListen() {
+  // Fermer les connexions existantes
+  if (_rtdbInputsES) { try { _rtdbInputsES.close(); } catch(e){} }
+  if (_rtdbGuidES)   { try { _rtdbGuidES.close(); } catch(e){} }
+
+  // Écoute inputs
+  _rtdbInputsES = new EventSource(`${RTDB_BASE}/inputs.json`);
+  _rtdbInputsES.addEventListener('put', e => {
+    try {
+      const {path, data} = JSON.parse(e.data);
+      if (path === '/') {
+        // Snapshot complet
+        const newAllInputs = {};
+        if (data) Object.entries(data).forEach(([id, d]) => {
+          const leverIdx = parseInt(id.split('_')[0]);
+          const uid = id.split('_').slice(1).join('_');
+          if (!newAllInputs[leverIdx]) newAllInputs[leverIdx] = {};
+          newAllInputs[leverIdx][uid] = d||{};
+        });
+        allInputs = newAllInputs;
+      } else {
+        // Mise à jour partielle : path = "/leverIdx_uid"
+        const id = path.replace(/^\//, '');
+        if (data === null) {
+          // Suppression
+          const leverIdx = parseInt(id.split('_')[0]);
+          const uid = id.split('_').slice(1).join('_');
+          if (allInputs[leverIdx]) delete allInputs[leverIdx][uid];
+        } else {
+          const leverIdx = parseInt(id.split('_')[0]);
+          const uid = id.split('_').slice(1).join('_');
+          if (!allInputs[leverIdx]) allInputs[leverIdx] = {};
+          allInputs[leverIdx][uid] = data;
+        }
+      }
       // Restaurer mes inputs si trouvés
       if (myId) {
         Object.entries(allInputs).forEach(([lvIdx, users]) => {
@@ -1153,37 +1147,47 @@ async function fbPoll() {
       if (currentStep===1) { refreshPeerInputs(); if(myName) renderInputLever(currentLever); }
       if (currentStep===2) refreshSynthCards();
       if (currentStep===4) renderExport();
-    }
-    // Charger guidances
-    const guidDocs = await fbList('guidances');
-    let guidChanged = false;
-    guidDocs.forEach(({id, data}) => {
-      const idx = parseInt(id);
-      const local = guidances[idx];
-      const merged = {...data};
-      if (local && local.synthesis && !data.synthesis) merged.synthesis = local.synthesis;
-      if (local && local.validated && !data.validated) { merged.validated=local.validated; merged.finalGuidance=local.finalGuidance||data.finalGuidance; merged._validatedAt=local._validatedAt; }
-      if (JSON.stringify(guidances[idx]) !== JSON.stringify(merged)) { guidances[idx]=merged; guidChanged=true; }
-    });
-    if (guidChanged) {
-      updateProgress(); updateLandStats();
-      if (currentStep===2) safeRenderDebate3Col(debateLever);
-    }
-    // Succès : réinitialiser le délai
-    _fbPoll429 = 0;
-    _fbPollDelay = 8000;
-  } catch(e) {
-    const msg = e.message || '';
-    if (msg.includes('429') || msg.includes('quota')) {
-      _fbPoll429++;
-      // Backoff exponentiel : 30s, 60s, 120s, max 5 min
-      _fbPollDelay = Math.min(300000, 30000 * Math.pow(2, _fbPoll429 - 1));
-      console.warn('[fbPoll] 429 — pause', Math.round(_fbPollDelay/1000) + 's');
-    } else {
-      console.warn('[fbPoll]', msg);
-    }
-  }
-  _fbPollTimer = setTimeout(fbPoll, _fbPollDelay);
+    } catch(err) { console.warn('[rtdb inputs]', err.message); }
+  });
+  _rtdbInputsES.onerror = () => {
+    // Reconnexion automatique gérée par EventSource
+    console.warn('[rtdb inputs] connexion perdue, reconnexion auto…');
+  };
+
+  // Écoute guidances
+  _rtdbGuidES = new EventSource(`${RTDB_BASE}/guidances.json`);
+  _rtdbGuidES.addEventListener('put', e => {
+    try {
+      const {path, data} = JSON.parse(e.data);
+      let guidChanged = false;
+      if (path === '/') {
+        if (data) Object.entries(data).forEach(([id, d]) => {
+          const idx = parseInt(id);
+          const merged = {...(d||{})};
+          const local = guidances[idx];
+          if (local && local.synthesis && !merged.synthesis) merged.synthesis = local.synthesis;
+          if (local && local.validated && !merged.validated) { merged.validated=local.validated; merged.finalGuidance=local.finalGuidance||merged.finalGuidance; merged._validatedAt=local._validatedAt; }
+          if (JSON.stringify(guidances[idx]) !== JSON.stringify(merged)) { guidances[idx]=merged; guidChanged=true; }
+        });
+      } else {
+        const idx = parseInt(path.replace(/^\//, ''));
+        if (!isNaN(idx)) {
+          const merged = {...(data||{})};
+          const local = guidances[idx];
+          if (local && local.synthesis && !merged.synthesis) merged.synthesis = local.synthesis;
+          if (local && local.validated && !merged.validated) { merged.validated=local.validated; merged.finalGuidance=local.finalGuidance||merged.finalGuidance; merged._validatedAt=local._validatedAt; }
+          if (JSON.stringify(guidances[idx]) !== JSON.stringify(merged)) { guidances[idx]=merged; guidChanged=true; }
+        }
+      }
+      if (guidChanged) {
+        updateProgress(); updateLandStats();
+        if (currentStep===2) safeRenderDebate3Col(debateLever);
+      }
+    } catch(err) { console.warn('[rtdb guidances]', err.message); }
+  });
+  _rtdbGuidES.onerror = () => {
+    console.warn('[rtdb guidances] connexion perdue, reconnexion auto…');
+  };
 }
 
 async function init() {
@@ -1205,13 +1209,12 @@ async function init() {
 
     // ── FIREBASE REST — fonctionne depuis n'importe quel hébergement ──
     // Test de connexion
-    const testR = await fetch(`${FB_BASE}/inputs?key=${FB_KEY}&pageSize=1`);
-    if (testR.status === 429) throw new Error('429 — quota Firebase dépassé, réessai dans 30s');
-    if (!testR.ok) throw new Error('Firebase inaccessible ' + testR.status);
+    const testR = await fetch(`${RTDB_BASE}/inputs.json?shallow=true`);
+    if (!testR.ok) throw new Error('Firebase Realtime DB inaccessible ' + testR.status);
     firestore = true;
 
-    // Démarrer le polling Firebase (toutes les 2s)
-    fbPoll();
+    // Démarrer les WebSockets temps réel (EventSource)
+    rtdbListen();
 
     // ── 1b. Mode facilitateur — jamais actif au démarrage ────────────────────
     try { localStorage.removeItem('elis_facilitator'); } catch(e) {}
@@ -1278,25 +1281,12 @@ async function init() {
 
   } catch(e) {
     console.warn('[init] erreur:', e.message||e);
-    const is429 = (e.message||'').includes('429');
-    if (is429) {
-      // Quota Firebase dépassé — réessayer dans 30s
-      statusEl.style.borderColor = '#F59E0B';
-      statusEl.style.background = '#2A1A00';
-      statusEl.textContent = '⏳ Quota Firebase atteint — reconnexion dans 30s… (rechargez la page)';
-      const overlay=document.getElementById('init-overlay');
-      if(overlay) overlay.classList.add('hidden');
-      initSoloMode();
-      // Tenter une reconnexion après 30s
-      setTimeout(() => { location.reload(); }, 30000);
-    } else {
-      statusEl.style.borderColor = '#F59E0B';
-      statusEl.textContent = '⚠️ Mode solo — pas de synchronisation temps réel';
-      setTimeout(() => { if(statusEl) statusEl.style.display='none'; }, 3000);
-      const overlay=document.getElementById('init-overlay');
-      if(overlay) overlay.classList.add('hidden');
-      initSoloMode();
-    }
+    statusEl.style.borderColor = '#F59E0B';
+    statusEl.textContent = '⚠️ Mode solo — pas de synchronisation temps réel';
+    setTimeout(() => { if(statusEl) statusEl.style.display='none'; }, 3000);
+    const overlay=document.getElementById('init-overlay');
+    if(overlay) overlay.classList.add('hidden');
+    initSoloMode();
   }
 }
 
@@ -2704,12 +2694,9 @@ async function resetAllData() {
   const btn = document.getElementById('btn-reset-db');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Suppression…'; }
   try {
-    // Supprimer tous les inputs via Firebase REST
-    const inputDocs = await fbList('inputs');
-    for (const {id} of inputDocs) { try { await fbDelete('inputs', id); } catch(e){} }
-    // Supprimer toutes les guidances via Firebase REST
-    const guidDocs = await fbList('guidances');
-    for (const {id} of guidDocs) { try { await fbDelete('guidances', id); } catch(e){} }
+    // Supprimer les nœuds entiers (une seule requête chacun)
+    await fbDeleteAll('inputs');
+    await fbDeleteAll('guidances');
     allInputs = {}; guidances = {}; myInputs = {};
     try { localStorage.clear(); } catch(e) {}
     updateProgress(); updateDots(); updateLandStats();

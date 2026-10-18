@@ -297,7 +297,7 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
 .deb-ctx-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,174,239,.08);border:1px solid rgba(0,174,239,.18);color:rgba(0,174,239,.7)}
 
 /* Grille 2 colonnes ─── */
-.debate-3col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;align-items:start}
+.debate-3col{display:flex;flex-direction:column;gap:0;margin-bottom:20px}
 .col-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .col-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--surface-2),var(--surface));border-radius:14px 14px 0 0}
 .col-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
@@ -712,15 +712,23 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
           </div>
         </div>
         <div class="deb-context-bar" id="deb-context-bar"></div>
-        <div class="debate-3col" id="debate-3col" style="margin-top:0">
-          <div class="col-panel">
+        <div id="debate-3col" style="margin-top:0;display:flex;flex-direction:column;gap:0">
+          <!-- BLOC IA -->
+          <div class="col-panel" style="border-radius:var(--radius) var(--radius) 0 0;border-bottom:none">
             <div class="col-header">
               <div class="col-icon ai">✦</div>
-              <span class="col-label cyan">Synthèse IA</span>
+              <span class="col-label cyan">Proposition IA — base de débat</span>
             </div>
             <div class="col-body" id="col-ai"></div>
           </div>
-          <div class="col-panel">
+          <!-- FLÈCHE TRANSITION -->
+          <div style="display:flex;align-items:center;gap:12px;padding:0 20px;background:rgba(0,174,239,.06);border-left:1px solid var(--border);border-right:1px solid var(--border)">
+            <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(0,174,239,.3))"></div>
+            <div style="font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:.5px;padding:8px 14px;background:rgba(0,174,239,.1);border:1px solid rgba(0,174,239,.25);border-radius:20px;white-space:nowrap">↓ CODIR Marketing — débat & validation</div>
+            <div style="flex:1;height:1px;background:linear-gradient(270deg,transparent,rgba(0,174,239,.3))"></div>
+          </div>
+          <!-- BLOC VALIDATION -->
+          <div class="col-panel" style="border-radius:0 0 var(--radius) var(--radius);border-top:none">
             <div class="col-header">
               <div class="col-icon prop">✓</div>
               <span class="col-label green">Guidance CODIR Marketing</span>

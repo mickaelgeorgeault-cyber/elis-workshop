@@ -1717,15 +1717,19 @@ function refreshPeerInputs() {
    Au dernier levier, bascule vers la vue Synthèse IA. */
 async function saveAndNextLever() {
   try {
-    // Force save même si myName n'est pas défini (autosave bloque sur !myName)
     const idx = currentLever;
-    const ta = document.getElementById('inp-main');
-    const val = ta ? ta.value.trim() : '';
-    if (myName && val) {
-      const key = `${idx}_${myName}`;
-      await fbSet('inputs', key, { name: myName, text: val, ts: Date.now(), lever: idx });
+    const orientEl = document.getElementById('inp-orientation');
+    const harmVoteEl = document.querySelector('#inp-harm-vote .hv-btn.selected');
+    const orientation = orientEl ? orientEl.value.trim() : '';
+    const harmVote = harmVoteEl ? harmVoteEl.dataset.v : '';
+    if (myName && myId && (orientation || harmVote)) {
+      const key = `${idx}_${myId}`;
+      const data = { name: myName, orientation, harmVote, color: myColor || '#1A2F8C', ts: Date.now(), lever: idx };
+      await fbSet('inputs', key, data);
       if (!allInputs[idx]) allInputs[idx] = {};
-      allInputs[idx][myName] = { name: myName, text: val, ts: Date.now(), lever: idx };
+      allInputs[idx][myId] = data;
+      if (!myInputs[idx]) myInputs[idx] = {};
+      myInputs[idx] = { orientation, harmVote, name: myName, color: myColor || '#1A2F8C' };
     } else {
       autosave(); // fallback autosave standard
     }
@@ -1733,7 +1737,6 @@ async function saveAndNextLever() {
       currentLever++;
       renderInputLever(currentLever);
     } else {
-      // Dernier levier — basculer vers Synthèse IA
       goStep(2);
     }
   } catch(e) { console.warn('[saveAndNextLever]:', e); }

@@ -1093,101 +1093,62 @@ async function fbDeleteAll(col) {
 async function fsSet(col, id, data) { return fbSet(col, id, data); }
 async function fsDelete(col, id) { return fbDelete(col, id); }
 
-// ── WebSocket temps réel via SSE (EventSource Firebase) ────────────────────
-let _rtdbInputsES = null;
-let _rtdbGuidES   = null;
+// ── Polling Realtime Database (5s) ─────────────────────────────────────────
+// Realtime DB : 400 000 op/jour gratuit → polling 5s = ~17 000/jour, aucun risque 429
+let _rtdbPollTimer = null;
 
-function rtdbListen() {
-  // Fermer les connexions existantes
-  if (_rtdbInputsES) { try { _rtdbInputsES.close(); } catch(e){} }
-  if (_rtdbGuidES)   { try { _rtdbGuidES.close(); } catch(e){} }
-
-  // Écoute inputs
-  _rtdbInputsES = new EventSource(`${RTDB_BASE}/inputs.json`);
-  _rtdbInputsES.addEventListener('put', e => {
-    try {
-      const {path, data} = JSON.parse(e.data);
-      if (path === '/') {
-        // Snapshot complet
-        const newAllInputs = {};
-        if (data) Object.entries(data).forEach(([id, d]) => {
-          const leverIdx = parseInt(id.split('_')[0]);
-          const uid = id.split('_').slice(1).join('_');
-          if (!newAllInputs[leverIdx]) newAllInputs[leverIdx] = {};
-          newAllInputs[leverIdx][uid] = d||{};
-        });
+async function rtdbListen() {
+  if (_rtdbPollTimer) clearTimeout(_rtdbPollTimer);
+  try {
+    // ── Inputs ──
+    const ri = await fetch(`${RTDB_BASE}/inputs.json`);
+    if (ri.ok) {
+      const data = await ri.json();
+      const newAllInputs = {};
+      if (data) Object.entries(data).forEach(([id, d]) => {
+        const leverIdx = parseInt(id.split('_')[0]);
+        const uid = id.split('_').slice(1).join('_');
+        if (!newAllInputs[leverIdx]) newAllInputs[leverIdx] = {};
+        newAllInputs[leverIdx][uid] = d || {};
+      });
+      if (JSON.stringify(newAllInputs) !== JSON.stringify(allInputs)) {
         allInputs = newAllInputs;
-      } else {
-        // Mise à jour partielle : path = "/leverIdx_uid"
-        const id = path.replace(/^\//, '');
-        if (data === null) {
-          // Suppression
-          const leverIdx = parseInt(id.split('_')[0]);
-          const uid = id.split('_').slice(1).join('_');
-          if (allInputs[leverIdx]) delete allInputs[leverIdx][uid];
-        } else {
-          const leverIdx = parseInt(id.split('_')[0]);
-          const uid = id.split('_').slice(1).join('_');
-          if (!allInputs[leverIdx]) allInputs[leverIdx] = {};
-          allInputs[leverIdx][uid] = data;
+        if (myId) {
+          Object.entries(allInputs).forEach(([lvIdx, users]) => {
+            if (users[myId]) {
+              const d = users[myId];
+              const taEl = document.getElementById('inp-orientation');
+              const isEditing = taEl && document.activeElement === taEl && currentLever === parseInt(lvIdx);
+              if (!isEditing) myInputs[parseInt(lvIdx)] = {orientation:d.orientation||'',harmVote:d.harmVote||'',name:d.name||'',color:d.color||''};
+            }
+          });
         }
+        updateProgress(); updateDots(); updateLandStats(); updateOnlineDisplay();
+        if (currentStep===1) { refreshPeerInputs(); if(myName) renderInputLever(currentLever); }
+        if (currentStep===2) refreshSynthCards();
+        if (currentStep===4) renderExport();
       }
-      // Restaurer mes inputs si trouvés
-      if (myId) {
-        Object.entries(allInputs).forEach(([lvIdx, users]) => {
-          if (users[myId]) {
-            const d = users[myId];
-            const taEl = document.getElementById('inp-orientation');
-            const isEditing = taEl && document.activeElement === taEl && currentLever === parseInt(lvIdx);
-            if (!isEditing) myInputs[parseInt(lvIdx)] = {orientation:d.orientation||'',harmVote:d.harmVote||'',name:d.name||'',color:d.color||''};
-          }
-        });
-      }
-      updateProgress(); updateDots(); updateLandStats(); updateOnlineDisplay();
-      if (currentStep===1) { refreshPeerInputs(); if(myName) renderInputLever(currentLever); }
-      if (currentStep===2) refreshSynthCards();
-      if (currentStep===4) renderExport();
-    } catch(err) { console.warn('[rtdb inputs]', err.message); }
-  });
-  _rtdbInputsES.onerror = () => {
-    // Reconnexion automatique gérée par EventSource
-    console.warn('[rtdb inputs] connexion perdue, reconnexion auto…');
-  };
-
-  // Écoute guidances
-  _rtdbGuidES = new EventSource(`${RTDB_BASE}/guidances.json`);
-  _rtdbGuidES.addEventListener('put', e => {
-    try {
-      const {path, data} = JSON.parse(e.data);
+    }
+    // ── Guidances ──
+    const rg = await fetch(`${RTDB_BASE}/guidances.json`);
+    if (rg.ok) {
+      const data = await rg.json();
       let guidChanged = false;
-      if (path === '/') {
-        if (data) Object.entries(data).forEach(([id, d]) => {
-          const idx = parseInt(id);
-          const merged = {...(d||{})};
-          const local = guidances[idx];
-          if (local && local.synthesis && !merged.synthesis) merged.synthesis = local.synthesis;
-          if (local && local.validated && !merged.validated) { merged.validated=local.validated; merged.finalGuidance=local.finalGuidance||merged.finalGuidance; merged._validatedAt=local._validatedAt; }
-          if (JSON.stringify(guidances[idx]) !== JSON.stringify(merged)) { guidances[idx]=merged; guidChanged=true; }
-        });
-      } else {
-        const idx = parseInt(path.replace(/^\//, ''));
-        if (!isNaN(idx)) {
-          const merged = {...(data||{})};
-          const local = guidances[idx];
-          if (local && local.synthesis && !merged.synthesis) merged.synthesis = local.synthesis;
-          if (local && local.validated && !merged.validated) { merged.validated=local.validated; merged.finalGuidance=local.finalGuidance||merged.finalGuidance; merged._validatedAt=local._validatedAt; }
-          if (JSON.stringify(guidances[idx]) !== JSON.stringify(merged)) { guidances[idx]=merged; guidChanged=true; }
-        }
-      }
+      if (data) Object.entries(data).forEach(([id, d]) => {
+        const idx = parseInt(id);
+        const merged = {...(d||{})};
+        const local = guidances[idx];
+        if (local && local.synthesis && !merged.synthesis) merged.synthesis = local.synthesis;
+        if (local && local.validated && !merged.validated) { merged.validated=local.validated; merged.finalGuidance=local.finalGuidance||merged.finalGuidance; merged._validatedAt=local._validatedAt; }
+        if (JSON.stringify(guidances[idx]) !== JSON.stringify(merged)) { guidances[idx]=merged; guidChanged=true; }
+      });
       if (guidChanged) {
         updateProgress(); updateLandStats();
         if (currentStep===2) safeRenderDebate3Col(debateLever);
       }
-    } catch(err) { console.warn('[rtdb guidances]', err.message); }
-  });
-  _rtdbGuidES.onerror = () => {
-    console.warn('[rtdb guidances] connexion perdue, reconnexion auto…');
-  };
+    }
+  } catch(e) { console.warn('[rtdbListen]', e.message); }
+  _rtdbPollTimer = setTimeout(rtdbListen, 5000);
 }
 
 async function init() {

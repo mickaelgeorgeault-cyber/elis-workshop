@@ -1121,6 +1121,8 @@ async function fsSet(col, id, data) { return fbSet(col, id, data); }
 async function fsDelete(col, id) { return fbDelete(col, id); }
 
 let _fbPollTimer = null;
+let _fbPollDelay = 8000;   // intervalle courant (ms)
+let _fbPoll429 = 0;        // compteur d'erreurs 429 consécutives
 async function fbPoll() {
   try {
     // Charger inputs
@@ -1167,8 +1169,21 @@ async function fbPoll() {
       updateProgress(); updateLandStats();
       if (currentStep===2) safeRenderDebate3Col(debateLever);
     }
-  } catch(e) { console.warn('[fbPoll]', e.message); }
-  _fbPollTimer = setTimeout(fbPoll, 3000);
+    // Succès : réinitialiser le délai
+    _fbPoll429 = 0;
+    _fbPollDelay = 8000;
+  } catch(e) {
+    const msg = e.message || '';
+    if (msg.includes('429') || msg.includes('quota')) {
+      _fbPoll429++;
+      // Backoff exponentiel : 30s, 60s, 120s, max 5 min
+      _fbPollDelay = Math.min(300000, 30000 * Math.pow(2, _fbPoll429 - 1));
+      console.warn('[fbPoll] 429 — pause', Math.round(_fbPollDelay/1000) + 's');
+    } else {
+      console.warn('[fbPoll]', msg);
+    }
+  }
+  _fbPollTimer = setTimeout(fbPoll, _fbPollDelay);
 }
 
 async function init() {
@@ -1191,7 +1206,8 @@ async function init() {
     // ── FIREBASE REST — fonctionne depuis n'importe quel hébergement ──
     // Test de connexion
     const testR = await fetch(`${FB_BASE}/inputs?key=${FB_KEY}&pageSize=1`);
-    if (!testR.ok) throw new Error('Firebase inaccessible');
+    if (testR.status === 429) throw new Error('429 — quota Firebase dépassé, réessai dans 30s');
+    if (!testR.ok) throw new Error('Firebase inaccessible ' + testR.status);
     firestore = true;
 
     // Démarrer le polling Firebase (toutes les 2s)
@@ -1262,12 +1278,25 @@ async function init() {
 
   } catch(e) {
     console.warn('[init] erreur:', e.message||e);
-    statusEl.style.borderColor = '#F59E0B';
-    statusEl.textContent = '⚠️ Mode solo — pas de synchronisation temps réel';
-    setTimeout(() => { if(statusEl) statusEl.style.display='none'; }, 3000);
-    const overlay=document.getElementById('init-overlay');
-    if(overlay) overlay.classList.add('hidden');
-    initSoloMode();
+    const is429 = (e.message||'').includes('429');
+    if (is429) {
+      // Quota Firebase dépassé — réessayer dans 30s
+      statusEl.style.borderColor = '#F59E0B';
+      statusEl.style.background = '#2A1A00';
+      statusEl.textContent = '⏳ Quota Firebase atteint — reconnexion dans 30s… (rechargez la page)';
+      const overlay=document.getElementById('init-overlay');
+      if(overlay) overlay.classList.add('hidden');
+      initSoloMode();
+      // Tenter une reconnexion après 30s
+      setTimeout(() => { location.reload(); }, 30000);
+    } else {
+      statusEl.style.borderColor = '#F59E0B';
+      statusEl.textContent = '⚠️ Mode solo — pas de synchronisation temps réel';
+      setTimeout(() => { if(statusEl) statusEl.style.display='none'; }, 3000);
+      const overlay=document.getElementById('init-overlay');
+      if(overlay) overlay.classList.add('hidden');
+      initSoloMode();
+    }
   }
 }
 

@@ -329,15 +329,15 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
 .synth-waiting-sub{font-size:11px;color:var(--fg-3);line-height:1.5}
 
 /* Proposition finale ─── */
-.prop-validated{background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(16,185,129,.04));border:1px solid rgba(16,185,129,.3);border-radius:11px;padding:16px 18px;margin-bottom:12px;position:relative;overflow:hidden}
-.prop-validated::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--validated),transparent)}
-.prop-val-lbl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--validated);margin-bottom:10px}
-.prop-val-txt{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--fg);line-height:1.6;letter-spacing:-.1px}
+.prop-validated{background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));border:1px solid rgba(16,185,129,.4);border-radius:11px;padding:16px 18px;margin-bottom:12px;position:relative;overflow:hidden}
+.prop-validated::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#10b981,transparent)}
+.prop-val-lbl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#059669;margin-bottom:10px}
+.prop-val-txt{font-family:var(--font-display);font-size:14px;font-weight:700;color:#0f172a;line-height:1.6;letter-spacing:-.1px}
 .prop-edit-wrap{position:relative;margin-bottom:12px}
-.prop-edit-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--fg-3);margin-bottom:6px}
-.prop-edit-area{width:100%;background:rgba(0,174,239,.04);border:1.5px solid rgba(0,174,239,.25);border-radius:10px;padding:13px 15px;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--fg);resize:none;min-height:180px;outline:none;line-height:1.65;transition:border-color .15s}
-.prop-edit-area:focus{border-color:var(--cyan);background:rgba(0,174,239,.07)}
-.prop-edit-area::placeholder{color:var(--fg-3);font-style:italic}
+.prop-edit-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b;margin-bottom:6px}
+.prop-edit-area{width:100%;background:#f8faff;border:1.5px solid #c7d4f0;border-radius:10px;padding:13px 15px;font-family:var(--font-body);font-size:13px;font-weight:500;color:#1A2F8C;resize:none;min-height:180px;outline:none;line-height:1.65;transition:border-color .15s}
+.prop-edit-area:focus{border-color:#1A2F8C;background:#fff}
+.prop-edit-area::placeholder{color:#94a3b8;font-style:italic}
 .prop-actions{display:flex;flex-direction:column;gap:7px}
 .btn-val{width:100%;padding:12px;background:linear-gradient(135deg,#0d9f6e,var(--validated));color:#fff;border:none;border-radius:9px;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.4px;box-shadow:0 2px 12px rgba(16,185,129,.3)}
 .btn-val:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 4px 18px rgba(16,185,129,.4)}
@@ -728,12 +728,12 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
             <div style="flex:1;height:1px;background:linear-gradient(270deg,transparent,rgba(0,174,239,.3))"></div>
           </div>
           <!-- BLOC VALIDATION -->
-          <div class="col-panel" style="border-radius:0 0 var(--radius) var(--radius);border-top:none">
-            <div class="col-header">
-              <div class="col-icon prop">✓</div>
-              <span class="col-label green">Guidance CODIR Marketing</span>
+          <div class="col-panel" style="border-radius:0 0 var(--radius) var(--radius);border-top:none;background:#fff">
+            <div class="col-header" style="background:#f0f4ff;border-bottom:1px solid #c7d4f0">
+              <div class="col-icon prop" style="background:#1A2F8C">✓</div>
+              <span class="col-label green" style="color:#1A2F8C;font-weight:800;font-size:13px">Guidance CODIR Marketing</span>
             </div>
-            <div class="col-body" id="col-proposal"></div>
+            <div class="col-body" id="col-proposal" style="color:#1A2F8C"></div>
           </div>
         </div>
       </div>
@@ -2043,10 +2043,10 @@ function renderDebate3Col(idx) {
       </div>`;
     } else {
       // Participant — lecture seule de la proposition
-      col3=`<div class="synth-waiting">
+      col3=`<div class="synth-waiting" style="color:#1A2F8C">
         <div class="synth-waiting-icon">⏳</div>
-        <div class="synth-waiting-title">En attente de validation</div>
-        <div class="synth-waiting-sub">La synthèse sera affinée<br>et validée en séance</div>
+        <div class="synth-waiting-title" style="color:#1A2F8C">En attente de validation</div>
+        <div class="synth-waiting-sub" style="color:#4a5f9a">La synthèse sera affinée<br>et validée en séance</div>
       </div>`;
     }
   } else {

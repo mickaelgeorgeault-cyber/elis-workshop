@@ -1613,6 +1613,7 @@ function renderInputLever(idx) {
     const d=myInputs[idx]||{};
     const taEl=document.getElementById('inp-orientation');
     if (taEl && document.activeElement!==taEl) taEl.value=d.orientation||'';
+    if (taEl) taEl.placeholder=`Quelle priorité stratégique pour votre direction sur "${lv.title}" ?`;
 
     // — Restaurer le vote d'harmonisation —
     document.querySelectorAll('#inp-harm-vote .hv-btn').forEach(b=>{

@@ -82,6 +82,36 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
 .land-s1-stat-lbl{font-size:10px;font-weight:500;letter-spacing:.8px;color:var(--fg-3)}
 
 /* ── STEP 2 — process ── */
+#land-step0{display:none;padding:0;overflow-y:auto}
+#land-step0.active{display:block}
+.land-s0-inner{max-width:760px;margin:0 auto;padding:40px 32px 60px}
+.s0-hero{background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:12px;padding:28px 32px;margin-bottom:28px}
+.s0-eyebrow{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--cyan);margin-bottom:10px;display:block}
+.s0-title{font-size:clamp(17px,2.4vw,22px);font-weight:700;color:#fff;line-height:1.3;margin:0 0 10px;letter-spacing:-.3px}
+.s0-sub{font-size:13px;color:var(--fg-2);line-height:1.7;margin:0}
+.s0-flow{display:flex;flex-direction:column;gap:0;margin-bottom:28px}
+.s0-step{display:flex;gap:0;align-items:stretch}
+.s0-left{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
+.s0-dot{width:28px;height:28px;border-radius:50%;background:var(--blue);border:2px solid var(--cyan);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1}
+.s0-dot.cyan{background:var(--cyan);color:var(--navy);border-color:var(--cyan)}
+.s0-line{width:2px;flex:1;min-height:12px;background:rgba(14,165,233,.2);margin:2px 0}
+.s0-card{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:16px 20px;margin-bottom:6px}
+.s0-card.highlight{border-color:rgba(14,165,233,.3);background:rgba(14,165,233,.06)}
+.s0-card-title{font-size:12.5px;font-weight:600;color:var(--fg);margin-bottom:5px}
+.s0-card-body{font-size:12px;color:var(--fg-2);line-height:1.65}
+.s0-card-body ul{padding-left:14px;margin-top:5px}
+.s0-card-body li{margin-bottom:2px}
+.s0-table-label{font-size:9.5px;font-weight:600;letter-spacing:1.2px;color:var(--fg-3);text-transform:uppercase;margin-bottom:10px;display:block}
+.s0-pillar{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-bottom:6px}
+.s0-pillar-hd{background:rgba(14,165,233,.12);padding:8px 16px;font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+.s0-lever{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px 16px;border-top:1px solid rgba(255,255,255,.05);font-size:12px}
+.s0-lever-sub{font-size:11px;color:var(--fg-3);margin-top:1px}
+.s0-badge{font-size:9.5px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.s0-badge.core{background:rgba(16,185,129,.15);color:#34D399}
+.s0-badge.common{background:rgba(96,165,250,.15);color:#93C5FD}
+.s0-badge.local{background:rgba(251,191,36,.12);color:#FCD34D}
+.s0-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--fg-3);margin-top:10px;margin-bottom:28px}
+.s0-legend-item{display:flex;align-items:center;gap:6px}
 #land-step2{display:none;padding:0}
 #land-step2.active{display:block}
 .land-s2-inner{max-width:660px;margin:0 auto;padding:56px 32px 60px}
@@ -575,12 +605,110 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
       <p class="land-s1-title">Sales<span class="accent">Engine</span></p>
       <div style="height:60px"></div>
       <div class="land-s1-cta">
-        <button class="btn-land primary" onclick="document.getElementById('land-step1').classList.remove('active');document.getElementById('land-step2').classList.add('active')">Commencer →</button>
+        <button class="btn-land primary" onclick="document.getElementById('land-step1').classList.remove('active');document.getElementById('land-step0').classList.add('active')">Commencer →</button>
       </div>
       <div id="land-validated" style="display:none"></div>
     </div>
 
 
+  </div>
+
+  <!-- ── STEP 0 — Synthèse intro ── -->
+  <div class="land-step" id="land-step0">
+    <div class="land-s0-inner">
+
+      <!-- Hero -->
+      <div class="s0-hero">
+        <span class="s0-eyebrow">Pourquoi sommes-nous là aujourd'hui ?</span>
+        <div class="s0-title">De l'ambition ExCo aux orientations de direction :<br>décider ensemble, levier par levier</div>
+        <div class="s0-sub">L'ExCo a posé le cadre. Les groupes de travail DIRCO ont synthétisé les options. Il revient aujourd'hui au CODIR Marketing de porter ses orientations stratégiques sur chacun des leviers du Sales Engine.</div>
+      </div>
+
+      <!-- Narrative flow -->
+      <div class="s0-flow">
+        <div class="s0-step">
+          <div class="s0-left"><div class="s0-dot">1</div><div class="s0-line"></div></div>
+          <div class="s0-card">
+            <div class="s0-card-title">Ambition ExCo — 3 enjeux identifiés</div>
+            <div class="s0-card-body">L'ExCo a mis en avant trois raisons fondamentales de construire un Sales Engine commun :
+              <ul>
+                <li><strong style="color:var(--fg)">Performance</strong> — identifier les leviers partagés qui font vraiment la différence entre pays</li>
+                <li><strong style="color:var(--fg)">ROI</strong> — ne converger que là où une approche commune génère un retour tangible</li>
+                <li><strong style="color:var(--fg)">Vitesse</strong> — lever le frein du manque d'harmonisation qui ralentit le déploiement des outils communs</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="s0-step">
+          <div class="s0-left"><div class="s0-dot">2</div><div class="s0-line"></div></div>
+          <div class="s0-card">
+            <div class="s0-card-title">Travaux DIRCO — d'une boîte à outils à un moteur actionnable</div>
+            <div class="s0-card-body">Les groupes de travail ont cadré la transition entre l'existant et la cible :
+              <ul>
+                <li><strong style="color:var(--fg)">Aujourd'hui</strong> — Route Commerciale, boîte à outils de pratiques éprouvées, construite et pilotée localement</li>
+                <li><strong style="color:var(--fg)">Demain</strong> — un Sales Engine scalable, fondations alignées levier par levier, avec un playbook opérationnel partagé</li>
+              </ul>
+              Pour chaque levier, trois niveaux de convergence ont été évalués : <strong style="color:var(--fg)">Modèle cœur</strong>, <strong style="color:var(--fg)">Principes communs</strong>, <strong style="color:var(--fg)">Autonomie locale</strong>.
+            </div>
+          </div>
+        </div>
+        <div class="s0-step">
+          <div class="s0-left"><div class="s0-dot cyan">3</div></div>
+          <div class="s0-card highlight">
+            <div class="s0-card-title" style="color:var(--cyan)">Aujourd'hui — le CODIR Marketing exprime ses orientations</div>
+            <div class="s0-card-body">Le CODIR ne débat pas de l'intérieur des leviers — il expose ses <strong style="color:var(--fg)">orientations stratégiques</strong>. Pour chaque levier, votre direction indique quelle ambition elle veut porter. L'IA synthétise ensuite les convergences et divergences collectives.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tableau synthèse DIRCO -->
+      <span class="s0-table-label">Synthèse DIRCO — options retenues par levier</span>
+
+      <div class="s0-pillar">
+        <div class="s0-pillar-hd">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Aligner l'organisation
+        </div>
+        <div class="s0-lever"><div><div style="font-weight:500">Structures commerciales</div><div class="s0-lever-sub">Alignement des organisations entre pays</div></div><span class="s0-badge local">Autonomie locale</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Profils commerciaux</div><div class="s0-lever-sub">Référentiel de profils partagé</div></div><span class="s0-badge common">Principes communs</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Langage commercial commun</div><div class="s0-lever-sub">Alignement sur un vocabulaire partagé</div></div><span class="s0-badge core">Modèle cœur</span></div>
+      </div>
+
+      <div class="s0-pillar">
+        <div class="s0-pillar-hd">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Focaliser la force de vente
+        </div>
+        <div class="s0-lever"><div><div style="font-weight:500">Processus de fixation d'objectifs</div><div class="s0-lever-sub">Harmonisation du target-setting</div></div><span class="s0-badge common">Principes communs</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Lettre d'objectifs individuelle</div><div class="s0-lever-sub">Modèle commun de lettre d'objectifs</div></div><span class="s0-badge common">Principes communs</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Rémunération variable</div><div class="s0-lever-sub">Règles de bonus et commissions</div></div><span class="s0-badge common">Principes communs</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Événements de reconnaissance</div><div class="s0-lever-sub">Participation à des événements communs</div></div><span class="s0-badge core">Modèle cœur</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Gestion des carrières commerciales</div><div class="s0-lever-sub">Harmonisation du career management</div></div><span class="s0-badge common">Principes communs</span></div>
+      </div>
+
+      <div class="s0-pillar">
+        <div class="s0-pillar-hd">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Faire tourner la machine
+        </div>
+        <div class="s0-lever"><div><div style="font-weight:500">Rituels managériaux</div><div class="s0-lever-sub">Alignement sur les rituels d'animation commerciale</div></div><span class="s0-badge common">Principes communs</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">Process et outils commerciaux</div><div class="s0-lever-sub">Process de vente et outils communs</div></div><span class="s0-badge core">Modèle cœur</span></div>
+        <div class="s0-lever"><div><div style="font-weight:500">KPIs managériaux &amp; Groupe</div><div class="s0-lever-sub">Gouvernance et indicateurs de pilotage partagés</div></div><span class="s0-badge core">Modèle cœur</span></div>
+      </div>
+
+      <div class="s0-legend">
+        <div class="s0-legend-item"><span class="s0-badge core">Modèle cœur</span><span>Convergence forte, approche commune</span></div>
+        <div class="s0-legend-item"><span class="s0-badge common">Principes communs</span><span>Cadre partagé, déclinaison locale</span></div>
+        <div class="s0-legend-item"><span class="s0-badge local">Autonomie locale</span><span>Chaque pays décide</span></div>
+      </div>
+
+      <!-- CTA -->
+      <div class="land-s2-cta">
+        <button class="btn-land ghost" onclick="document.getElementById('land-step0').classList.remove('active');document.getElementById('land-step1').classList.add('active')">← Retour</button>
+        <button class="btn-land primary" onclick="document.getElementById('land-step0').classList.remove('active');document.getElementById('land-step2').classList.add('active')">Mode opératoire →</button>
+      </div>
+
+    </div>
   </div>
 
   <!-- ── STEP 2 — Process ── -->

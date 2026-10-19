@@ -178,8 +178,11 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
 
 /* Contexte — fond légèrement teinté */
 .lever-ctx-wrap{background:#F1F5FB;border-radius:6px;padding:9px 13px;margin-bottom:8px;border-left:3px solid #BCC8DE}
-.lever-ctx{font-size:12.5px;color:#2A3866;line-height:1.7;font-weight:400}
-.lever-ctx-label{font-size:9px;font-weight:600;letter-spacing:1px;color:#7A8BAD;margin-bottom:4px}
+.lever-ctx{font-size:12.5px;color:#2A3866;line-height:1.7;font-weight:400;display:none}
+.lever-ctx-label{font-size:9px;font-weight:600;letter-spacing:1px;color:#7A8BAD;margin-bottom:0;cursor:pointer;display:flex;align-items:center;gap:5px;user-select:none}
+.lever-ctx-label::after{content:'▸';font-size:8px;transition:transform .15s}
+.lever-ctx-label.open::after{content:'▾'}
+.lever-ctx-label.open{margin-bottom:4px}
 
 /* Tags */
 .ctx-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:0}
@@ -658,7 +661,7 @@ html,body{height:100%;margin:0;font-family:var(--font-body);background:var(--bg)
             <h2 class="lever-title" id="inp-title">—</h2>
             <div id="inp-subtitle" style="font-size:12px;color:rgba(255,255,255,.75);margin:-8px 0 10px 18px;line-height:1.4;font-style:italic"></div>
             <div class="lever-ctx-wrap">
-              <div class="lever-ctx-label">Contexte</div>
+              <div class="lever-ctx-label" onclick="var c=this.nextElementSibling;var open=c.style.display==='block';c.style.display=open?'none':'block';this.classList.toggle('open',!open)">Contexte</div>
               <div class="lever-ctx" id="inp-ctx">—</div>
             </div>
             <div class="ctx-tags" id="inp-tags"></div>
